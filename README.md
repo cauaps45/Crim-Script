@@ -5,7 +5,7 @@
     - Crates & Ground Items: Highlight na malha real + supressão de Highlight nativo perto
     - Mystery Boxes: Workspace.Map.MysteryBoxes (ex.: HALLOWS_MysteryBox - mais próxima)
     - Registers / Safes / ATMs / Dealers / Trash / Night Vision
-    - Rebel Dealer ESP: Desabilitado e marcado como EM MANUTENÇÃO
+    - Rebel Dealer ESP: Bloqueado e marcado como EM MANUTENÇÃO
     - Player ESP: Filtro por nomes separados por vírgula ("uraraka, KFC, sincryz")
 ]]
 
@@ -34,7 +34,7 @@ local Settings = {
     Safes       = { Enabled = false, ColorClosed = Color3.fromRGB(34, 197, 94), ColorOpen = Color3.fromRGB(239, 68, 68), Distance = 250, ShowDist = true },
     ATMs        = { Enabled = false, Color = Color3.fromRGB(170, 0, 255), Distance = 250, ShowDist = true },
     Dealers     = { Enabled = false, Color = Color3.fromRGB(0, 150, 255), Distance = 250, ShowDist = true },
-    RebelDealers= { Enabled = false, Color = Color3.fromRGB(255, 0, 0), Distance = 250, ShowDist = true, Maintenance = true },
+    RebelDealers= { Enabled = false, Color = Color3.fromRGB(255, 0, 0), Distance = 250, ShowDist = true, Locked = true },
     Crates      = { Enabled = false, Color = Color3.fromRGB(255, 120, 0), Distance = 250, ShowDist = false },
     GroundItems = { Enabled = false, Color = Color3.fromRGB(255, 230, 0), CashColor = Color3.fromRGB(74, 222, 128), Distance = 250, ShowDist = true },
     Trash       = { Enabled = false, Color = Color3.fromRGB(139, 69, 19), Distance = 250, ShowDist = true },
@@ -552,33 +552,41 @@ local function addToggle(name, getFn, setFn)
     yPos += 36
 end
 
-local function addRebelMaintenanceBlock()
+local function addRebelDealerLocked()
     Settings.RebelDealers.Enabled = false
+    Settings.RebelDealers.Locked = true
     addSection("Rebel Dealer ESP")
 
     local b = Instance.new("TextButton")
     b.Size = UDim2.new(0.92, 0, 0, 32)
     b.Position = UDim2.new(0.04, 0, 0, yPos)
-    b.BackgroundColor3 = Color3.fromRGB(32, 24, 28)
-    b.Text = "REBEL DEALER ESP [EM MANUTENÇÃO]"
-    b.TextColor3 = Color3.fromRGB(251, 146, 60)
+    b.BackgroundColor3 = Color3.fromRGB(38, 22, 26)
+    b.Text = "Rebel Dealer ESP [BLOQUEADO - EM MANUTENÇÃO]"
+    b.TextColor3 = Color3.fromRGB(248, 113, 113)
     b.TextSize = 11
     b.Font = Enum.Font.GothamBold
+    b.Active = false
     b.AutoButtonColor = false
     b.Parent = Scroll
     Instance.new("UICorner", b).CornerRadius = UDim.new(0, 7)
+
+    b.MouseButton1Click:Connect(function()
+        Settings.RebelDealers.Enabled = false
+        b.Text = "Rebel Dealer ESP [BLOQUEADO - EM MANUTENÇÃO]"
+        b.TextColor3 = Color3.fromRGB(248, 113, 113)
+    end)
     yPos += 34
 
-    local warn = Instance.new("TextLabel")
-    warn.Size = UDim2.new(0.92, 0, 0, 18)
-    warn.Position = UDim2.new(0.04, 0, 0, yPos)
-    warn.BackgroundTransparency = 1
-    warn.Text = "Função desabilitada temporariamente: em manutenção"
-    warn.TextColor3 = Color3.fromRGB(253, 186, 116)
-    warn.TextSize = 10
-    warn.Font = Enum.Font.Gotham
-    warn.TextXAlignment = Enum.TextXAlignment.Left
-    warn.Parent = Scroll
+    local statusLbl = Instance.new("TextLabel")
+    statusLbl.Size = UDim2.new(0.92, 0, 0, 18)
+    statusLbl.Position = UDim2.new(0.04, 0, 0, yPos)
+    statusLbl.BackgroundTransparency = 1
+    statusLbl.Text = "Status: Desabilitado / Bloqueado em manutenção"
+    statusLbl.TextColor3 = Color3.fromRGB(252, 165, 165)
+    statusLbl.TextSize = 10
+    statusLbl.Font = Enum.Font.GothamSemibold
+    statusLbl.TextXAlignment = Enum.TextXAlignment.Left
+    statusLbl.Parent = Scroll
     yPos += 24
 end
 
@@ -648,7 +656,7 @@ addObjBlock("Registers ESP", Settings.Registers, false)
 addObjBlock("Safes ESP", Settings.Safes, false)
 addObjBlock("ATMs ESP", Settings.ATMs, false)
 addObjBlock("Dealers ESP", Settings.Dealers, false)
-addRebelMaintenanceBlock()
+addRebelDealerLocked()
 addObjBlock("Crates ESP", Settings.Crates, true)
 addObjBlock("Ground Items ESP", Settings.GroundItems, false)
 addObjBlock("Trash ESP", Settings.Trash, false)
@@ -1034,7 +1042,7 @@ local candidateBuffer = {}
 local partsBuffer = {}
 
 local function processCategory(list, cfg, kind, colFn, maxPerCategory, noTag, prioritizeClose)
-    if cfg.Maintenance then
+    if cfg.Locked then
         cfg.Enabled = false
     end
 
@@ -1152,6 +1160,8 @@ end)
 
 local accum = 0
 local renderConn = RunService.RenderStepped:Connect(function(dt)
+    Settings.RebelDealers.Enabled = false
+
     if Settings.NightVision then
         applyNightVisionFrame()
     end
